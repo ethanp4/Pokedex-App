@@ -23,8 +23,11 @@ class PokemonViewModel : ViewModel() {
     private val _currentPokemonDetails = MutableLiveData<PokemonDetails>(null)
     val currentPokemonDetails: LiveData<PokemonDetails> get() = _currentPokemonDetails
 
+//    private val _detailedPokemonList = MutableLiveData<List<PokemonDetails>>(emptyList())
+//    val detailedPokemonList: LiveData<List<PokemonDetails>> get() = _detailedPokemonList
+
     init {
-        getPokemon(10000, 0)
+        getPokemon(20, 0)
     }
 
     fun getPokemon(limit: Int, offset: Int) {
