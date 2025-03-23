@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.example.pokedex2.ui.PokedexApp
 import com.example.pokedex2.ui.theme.Pokedex2Theme
 
 class MainActivity : ComponentActivity() {

@@ -1,7 +1,8 @@
 package com.example.pokedex2.network
 
-data class Pokemon(
+data class PokemonDetails(
     val id: Int,
     val name: String,
-    val url: String
+    val weight: Int,
+    val height: Int
 )

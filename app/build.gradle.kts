@@ -63,5 +63,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation (libs.androidx.runtime.livedata)
 
-    implementation(libs.kotlinx.collections.immutable)
+    implementation("androidx.navigation:navigation-compose:2.7.4")
+
 }
