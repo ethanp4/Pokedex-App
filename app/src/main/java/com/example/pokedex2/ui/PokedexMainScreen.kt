@@ -24,12 +24,13 @@ import androidx.navigation.compose.rememberNavController
 import com.example.pokedex2.R
 import com.example.pokedex2.network.Pokemon
 
-
+//stores the names of each screen for navigation
 enum class PokedexMainScreen(@StringRes val title: Int) {
     Start(title = R.string.app_name),
     Details(title = R.string.details)
 }
 
+//main composable for the app
 @Composable
 fun PokedexApp(
     viewModel: PokemonViewModel = viewModel(),
@@ -53,34 +54,41 @@ fun PokedexApp(
             }
             composable(route = PokedexMainScreen.Details.name) {
                 PokemonDetails(
-                    selectedPokemon = viewModel.uiState.value.selectedPokemonId,
+                    selectedPokemon = uiState.selectedPokemonId,
                     viewModel = viewModel
                 )
             }
         }
-
     }
 }
 
+//this composable is the details screen
 @Composable
 fun PokemonDetails(selectedPokemon: Int, viewModel: PokemonViewModel) {
+    //send a get request
     viewModel.getPokemonById(selectedPokemon)
+    //observe the variable in viewmodel for the result
     val pokemon = viewModel.currentPokemonDetails.observeAsState()
-    Column {
-        Text("ID is ${pokemon.value?.id}")
-        Text("Weight is ${pokemon.value?.weight}")
+    if (pokemon.value == null) {
+        Text("Loading")
+    } else {
+        Column {
+            Text("ID is ${pokemon.value?.id}")
+            Text("Weight is ${pokemon.value?.weight}")
+        }
     }
-
 }
 
+//this composable displays the list of every pokemon
 @Composable
 fun PokemonList(
     viewModel: PokemonViewModel,
     modifier: Modifier = Modifier,
     navController: NavHostController
 ) {
+    //observe the pokemonList for updates
+    //getPokemon is automatically called on init
     val pokemonList = viewModel.pokemonList.observeAsState(initial = emptyList())
-
     if (pokemonList.value.isEmpty()) {
         Text("Loading..")
     } else {
@@ -92,6 +100,7 @@ fun PokemonList(
     }
 }
 
+//each pokemon in the list on the main screen
 @Composable
 fun PokemonItem(pokemon: Pokemon, viewModel: PokemonViewModel, navController: NavHostController) {
     Card (modifier = Modifier.fillMaxWidth(), onClick = {

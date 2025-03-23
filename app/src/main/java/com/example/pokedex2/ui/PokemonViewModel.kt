@@ -41,7 +41,6 @@ class PokemonViewModel : ViewModel() {
         }
     }
 
-
     fun getPokemonById(id: Int) {
         viewModelScope.launch {
             try {
