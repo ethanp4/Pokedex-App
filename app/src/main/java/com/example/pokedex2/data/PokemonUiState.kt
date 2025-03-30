@@ -1,4 +1,4 @@
-package com.example.pokedex2.network
+package com.example.pokedex2.data
 
 //used for storing the id of the selected pokemon
 data class PokemonUiState(

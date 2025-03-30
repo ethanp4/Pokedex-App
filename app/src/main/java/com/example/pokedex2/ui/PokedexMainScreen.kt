@@ -22,7 +22,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.pokedex2.R
-import com.example.pokedex2.network.Pokemon
+import com.example.pokedex2.data.Pokemon
 
 //stores the names of each screen for navigation
 enum class PokedexMainScreen(@StringRes val title: Int) {
@@ -104,7 +104,7 @@ fun PokemonList(
 @Composable
 fun PokemonItem(pokemon: Pokemon, viewModel: PokemonViewModel, navController: NavHostController) {
     Card (modifier = Modifier.fillMaxWidth(), onClick = {
-        viewModel.uiState.value.selectedPokemonId = pokemon.id
+        viewModel.uiState.value.selectedPokemonId = pokemon.id!!
         navController.navigate(PokedexMainScreen.Details.name)
         Log.d("Click", "${pokemon.name} was clicked")
         Log.d("Click", "Selected pokemon id: ${viewModel.uiState.value.selectedPokemonId}")

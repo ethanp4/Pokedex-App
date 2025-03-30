@@ -1,16 +1,24 @@
 package com.example.pokedex2.network
 
+import com.example.pokedex2.data.Pokemon
+import com.example.pokedex2.data.PokemonDetails
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
 
 private const val BASE_URL = "https://pokeapi.co/api/v2/"
 
+private val moshi = Moshi.Builder()
+    .add(KotlinJsonAdapterFactory())
+    .build()
+
 private val retrofit = Retrofit.Builder()
-    .addConverterFactory(GsonConverterFactory.create())
     .baseUrl(BASE_URL)
+    .addConverterFactory(MoshiConverterFactory.create(moshi))
     .build()
 
 interface PokeApiService {
@@ -24,7 +32,6 @@ interface PokeApiService {
     suspend fun getPokemonById(
         @Path("id") id: String
     ): PokemonDetails
-
 }
 
 data class PokemonResponse(

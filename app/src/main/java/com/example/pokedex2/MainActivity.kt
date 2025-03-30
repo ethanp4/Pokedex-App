@@ -1,6 +1,7 @@
 package com.example.pokedex2
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.example.pokedex2.data.PokemonRepository
 import com.example.pokedex2.ui.PokedexApp
 import com.example.pokedex2.ui.theme.Pokedex2Theme
 
@@ -19,6 +21,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             Pokedex2Theme {
                 Surface(modifier = Modifier.fillMaxSize()) {
+                    PokemonRepository.cacheDir = cacheDir
                     PokedexApp()
                 }
             }
