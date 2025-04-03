@@ -5,6 +5,8 @@ import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -23,6 +25,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.pokedex2.R
 import com.example.pokedex2.data.Pokemon
+import com.example.pokedex2.data.PokemonDetails
+import coil.compose.rememberAsyncImagePainter
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 //stores the names of each screen for navigation
 enum class PokedexMainScreen(@StringRes val title: Int) {
@@ -52,11 +59,11 @@ fun PokedexApp(
                     navController = navController
                 )
             }
-            composable(route = PokedexMainScreen.Details.name) {
-                PokemonDetails(
-                    selectedPokemon = uiState.selectedPokemonId,
-                    viewModel = viewModel
-                )
+            composable(route = "details/{pokemonId}") { backStackEntry ->
+                val pokemonId = backStackEntry.arguments?.getString("pokemonId")?.toIntOrNull()
+                pokemonId?.let {
+                    PokemonDetailsScreen(pokemonId = it, viewModel = viewModel)
+                }
             }
         }
     }
@@ -64,17 +71,27 @@ fun PokedexApp(
 
 //this composable is the details screen
 @Composable
-fun PokemonDetails(selectedPokemon: Int, viewModel: PokemonViewModel) {
-    //send a get request
-    viewModel.getPokemonById(selectedPokemon)
-    //observe the variable in viewmodel for the result
+fun PokemonDetailsScreen(pokemonId: Int, viewModel: PokemonViewModel) {
+    viewModel.getPokemonById(pokemonId)
     val pokemon = viewModel.currentPokemonDetails.observeAsState()
     if (pokemon.value == null) {
-        Text("Loading")
+        Text("Loading...")
     } else {
-        Column {
-            Text("ID is ${pokemon.value?.id}")
-            Text("Weight is ${pokemon.value?.weight}")
+        val details: PokemonDetails = pokemon.value!!
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = rememberAsyncImagePainter(details.sprites.other?.officialArtwork?.frontDefault),
+                contentDescription = details.name,
+                modifier = Modifier.size(200.dp)
+            )
+            Text(text = "#${details.id} ${details.name.capitalize()}")
+            Text(text = "Height: ${details.height}")
+            Text(text = "Weight: ${details.weight}")
+            Text(text = "Base Experience: ${details.base_experience}")
+            Text(text = "Types: ${details.types.joinToString { it.type.name.capitalize() }}")
         }
     }
 }
@@ -86,8 +103,6 @@ fun PokemonList(
     modifier: Modifier = Modifier,
     navController: NavHostController
 ) {
-    //observe the pokemonList for updates
-    //getPokemon is automatically called on init
     val pokemonList = viewModel.pokemonList.observeAsState(initial = emptyList())
     if (pokemonList.value.isEmpty()) {
         Text("Loading..")
@@ -105,7 +120,7 @@ fun PokemonList(
 fun PokemonItem(pokemon: Pokemon, viewModel: PokemonViewModel, navController: NavHostController) {
     Card (modifier = Modifier.fillMaxWidth(), onClick = {
         viewModel.uiState.value.selectedPokemonId = pokemon.id!!
-        navController.navigate(PokedexMainScreen.Details.name)
+        navController.navigate("details/${pokemon.id}")
         Log.d("Click", "${pokemon.name} was clicked")
         Log.d("Click", "Selected pokemon id: ${viewModel.uiState.value.selectedPokemonId}")
     }) {
