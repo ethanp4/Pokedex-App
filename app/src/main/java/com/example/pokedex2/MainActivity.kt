@@ -22,6 +22,7 @@ class MainActivity : ComponentActivity() {
             Pokedex2Theme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     PokemonRepository.cacheDir = cacheDir
+                    PokemonRepository.updateCacheStats()
                     PokedexApp()
                 }
             }
