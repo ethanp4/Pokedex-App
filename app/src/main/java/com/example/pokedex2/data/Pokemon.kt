@@ -5,5 +5,5 @@ package com.example.pokedex2.data
 data class Pokemon(
     val id: Int?,
     val name: String,
-    val url: String
+    val url: String,
 )
