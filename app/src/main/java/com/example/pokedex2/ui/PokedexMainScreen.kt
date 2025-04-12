@@ -29,7 +29,14 @@ import com.example.pokedex2.data.PokemonDetails
 import coil.compose.rememberAsyncImagePainter
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.graphics.Color
 
 //stores the names of each screen for navigation
 enum class PokedexMainScreen(@StringRes val title: Int) {
@@ -74,12 +81,16 @@ fun PokedexApp(
 fun PokemonDetailsScreen(pokemonId: Int, viewModel: PokemonViewModel) {
     viewModel.getPokemonById(pokemonId)
     val pokemon = viewModel.currentPokemonDetails.observeAsState()
+
     if (pokemon.value == null) {
         Text("Loading...")
     } else {
-        val details: PokemonDetails = pokemon.value!!
+        val details = pokemon.value!!
+
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
@@ -87,11 +98,54 @@ fun PokemonDetailsScreen(pokemonId: Int, viewModel: PokemonViewModel) {
                 contentDescription = details.name,
                 modifier = Modifier.size(200.dp)
             )
-            Text(text = "#${details.id} ${details.name.capitalize()}")
-            Text(text = "Height: ${details.height}")
-            Text(text = "Weight: ${details.weight}")
-            Text(text = "Base Experience: ${details.base_experience}")
-            Text(text = "Types: ${details.types.joinToString { it.type.name.capitalize() }}")
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(text = "#${details.id} ${details.name.replaceFirstChar { it.uppercase() }}")
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // types
+            Text(
+                text = "Types: ${details.types.joinToString { it.type.name.replaceFirstChar { it.uppercase() } }}"
+            )
+
+            // abilities
+            Text(
+                text = "Abilities: ${details.abilities.joinToString { it.ability.name.replaceFirstChar { it.uppercase() } }}"
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Base Stats
+            Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+                Text(text = "Base Stats:", modifier = Modifier.padding(bottom = 8.dp))
+
+                details.stats.forEach { stat ->
+                    val statName = stat.stat.name.replace("-", " ").replaceFirstChar { it.uppercase() }
+                    val statValue = stat.base_stat
+                    val progress = (statValue.coerceAtMost(150)) / 150f
+
+                    Text(text = "$statName: $statValue", modifier = Modifier.padding(vertical = 4.dp))
+
+                    //Bars under each stat
+                    LinearProgressIndicator(
+                        progress = progress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(10.dp)
+                            .padding(bottom = 8.dp),
+                        color = when (stat.stat.name) {
+                            "hp" -> androidx.compose.ui.graphics.Color.Green
+                            "attack" -> androidx.compose.ui.graphics.Color.Red
+                            "defense" -> androidx.compose.ui.graphics.Color.Yellow
+                            "speed" -> androidx.compose.ui.graphics.Color.Cyan
+                            "special-attack" -> androidx.compose.ui.graphics.Color.Magenta
+                            "special-defense" -> androidx.compose.ui.graphics.Color.Blue
+                            else -> androidx.compose.ui.graphics.Color.Gray
+                        }
+                    )
+                }
+            }
         }
     }
 }
@@ -104,27 +158,79 @@ fun PokemonList(
     navController: NavHostController
 ) {
     val pokemonList = viewModel.pokemonList.observeAsState(initial = emptyList())
-    if (pokemonList.value.isEmpty()) {
-        Text("Loading..")
-    } else {
-        LazyColumn(modifier = modifier) {
-            items(pokemonList.value) {
-                PokemonItem(pokemon = it, viewModel = viewModel, navController = navController)
+    var searchQuery by remember { mutableStateOf("") }
+
+    Column(modifier = modifier.padding(16.dp)) {
+        // Search Bar
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            label = { Text("Search") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        )
+
+        val filteredList = pokemonList.value.filter {
+            it.name.contains(searchQuery.trim(), ignoreCase = true)
+        }
+
+        if (pokemonList.value.isEmpty()) {
+            Text("Loading...")
+        } else {
+            LazyColumn {
+                items(filteredList) { pokemon ->
+                    PokemonItem(
+                        pokemon = pokemon,
+                        viewModel = viewModel,
+                        navController = navController
+                    )
+                }
             }
         }
     }
 }
 
+
 //each pokemon in the list on the main screen
 @Composable
 fun PokemonItem(pokemon: Pokemon, viewModel: PokemonViewModel, navController: NavHostController) {
-    Card (modifier = Modifier.fillMaxWidth(), onClick = {
-        viewModel.uiState.value.selectedPokemonId = pokemon.id!!
-        navController.navigate("details/${pokemon.id}")
-        Log.d("Click", "${pokemon.name} was clicked")
-        Log.d("Click", "Selected pokemon id: ${viewModel.uiState.value.selectedPokemonId}")
-    }) {
-        Text(text = "ID: " + pokemon.id)
-        Text(text = pokemon.name)
+    val imageUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png"
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        onClick = {
+            viewModel.uiState.value.selectedPokemonId = pokemon.id!!
+            navController.navigate("details/${pokemon.id}")
+            Log.d("Click", "${pokemon.name} was clicked")
+        }
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(16.dp)
+        ) {
+            // pokemon image
+            Image(
+                painter = rememberAsyncImagePainter(model = imageUrl),
+                contentDescription = pokemon.name,
+                modifier = Modifier
+                    .size(56.dp)
+                    .padding(end = 16.dp)
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = pokemon.name.replaceFirstChar { it.uppercase() },
+                    style = androidx.compose.material3.MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "#${pokemon.id.toString().padStart(4, '0')}",
+                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall
+                )
+            }
+
+        }
     }
 }
+
