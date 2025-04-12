@@ -30,8 +30,13 @@ import coil.compose.rememberAsyncImagePainter
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.LinearProgressIndicator
-
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.graphics.Color
 
 //stores the names of each screen for navigation
 enum class PokedexMainScreen(@StringRes val title: Int) {
@@ -153,20 +158,45 @@ fun PokemonList(
     navController: NavHostController
 ) {
     val pokemonList = viewModel.pokemonList.observeAsState(initial = emptyList())
-    if (pokemonList.value.isEmpty()) {
-        Text("Loading..")
-    } else {
-        LazyColumn(modifier = modifier) {
-            items(pokemonList.value) {
-                PokemonItem(pokemon = it, viewModel = viewModel, navController = navController)
+    var searchQuery by remember { mutableStateOf("") }
+
+    Column(modifier = modifier.padding(16.dp)) {
+        // Search Bar
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            label = { Text("Search") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        )
+
+        val filteredList = pokemonList.value.filter {
+            it.name.contains(searchQuery.trim(), ignoreCase = true)
+        }
+
+        if (pokemonList.value.isEmpty()) {
+            Text("Loading...")
+        } else {
+            LazyColumn {
+                items(filteredList) { pokemon ->
+                    PokemonItem(
+                        pokemon = pokemon,
+                        viewModel = viewModel,
+                        navController = navController
+                    )
+                }
             }
         }
     }
 }
 
+
 //each pokemon in the list on the main screen
 @Composable
 fun PokemonItem(pokemon: Pokemon, viewModel: PokemonViewModel, navController: NavHostController) {
+    val imageUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png"
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -179,11 +209,16 @@ fun PokemonItem(pokemon: Pokemon, viewModel: PokemonViewModel, navController: Na
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .padding(16.dp)
+            modifier = Modifier.padding(16.dp)
         ) {
-
-            // Name and ID
+            // pokemon image
+            Image(
+                painter = rememberAsyncImagePainter(model = imageUrl),
+                contentDescription = pokemon.name,
+                modifier = Modifier
+                    .size(56.dp)
+                    .padding(end = 16.dp)
+            )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = pokemon.name.replaceFirstChar { it.uppercase() },
@@ -198,3 +233,4 @@ fun PokemonItem(pokemon: Pokemon, viewModel: PokemonViewModel, navController: Na
         }
     }
 }
+
