@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults.cardColors
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +32,7 @@ import coil.compose.rememberAsyncImagePainter
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -37,6 +40,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.graphics.Color
+import com.example.pokedex2.ui.theme.TypeColors
+import com.example.pokedex2.ui.theme.TypeColors.bug
+import com.example.pokedex2.ui.theme.TypeColors.dark
+import com.example.pokedex2.ui.theme.TypeColors.dragon
+import com.example.pokedex2.ui.theme.TypeColors.fairy
+import com.example.pokedex2.ui.theme.TypeColors.fighting
+import com.example.pokedex2.ui.theme.TypeColors.flying
+import com.example.pokedex2.ui.theme.TypeColors.ghost
+import com.example.pokedex2.ui.theme.TypeColors.ground
+import com.example.pokedex2.ui.theme.TypeColors.ice
+import com.example.pokedex2.ui.theme.TypeColors.poison
+import com.example.pokedex2.ui.theme.TypeColors.psychic
+import com.example.pokedex2.ui.theme.TypeColors.rock
+import com.example.pokedex2.ui.theme.TypeColors.steel
+import com.google.gson.Gson
+import java.io.File
+import java.io.FileInputStream
 
 //stores the names of each screen for navigation
 enum class PokedexMainScreen(@StringRes val title: Int) {
@@ -135,13 +155,13 @@ fun PokemonDetailsScreen(pokemonId: Int, viewModel: PokemonViewModel) {
                             .height(10.dp)
                             .padding(bottom = 8.dp),
                         color = when (stat.stat.name) {
-                            "hp" -> androidx.compose.ui.graphics.Color.Green
-                            "attack" -> androidx.compose.ui.graphics.Color.Red
-                            "defense" -> androidx.compose.ui.graphics.Color.Yellow
-                            "speed" -> androidx.compose.ui.graphics.Color.Cyan
-                            "special-attack" -> androidx.compose.ui.graphics.Color.Magenta
-                            "special-defense" -> androidx.compose.ui.graphics.Color.Blue
-                            else -> androidx.compose.ui.graphics.Color.Gray
+                            "hp" -> Color.Green
+                            "attack" -> Color.Red
+                            "defense" -> Color.Yellow
+                            "speed" -> Color.Cyan
+                            "special-attack" -> Color.Magenta
+                            "special-defense" -> Color.Blue
+                            else -> Color.Gray
                         }
                     )
                 }
@@ -196,7 +216,37 @@ fun PokemonList(
 @Composable
 fun PokemonItem(pokemon: Pokemon, viewModel: PokemonViewModel, navController: NavHostController) {
     val imageUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png"
+    val detailsPath = viewModel.pokemonDetailsMap.value?.get(pokemon.id)
+    var containerColor = MaterialTheme.colorScheme.surfaceContainer
 
+    if (detailsPath != null) {
+        val gson = Gson()
+        val json = FileInputStream(detailsPath).bufferedReader().use { it.readText() }
+        val details = gson.fromJson(json, PokemonDetails::class.java)
+        containerColor = when (details.types[0].type.name) {
+            "normal" -> TypeColors.normal
+            "fire" -> TypeColors.fire
+            "water" -> TypeColors.water
+            "electric" -> TypeColors.electric
+            "grass" -> TypeColors.grass
+            "ice" -> TypeColors.ice
+            "fighting" -> TypeColors.fighting
+            "poison" -> TypeColors.poison
+            "ground" -> TypeColors.ground
+            "flying" -> TypeColors.flying
+            "psychic" -> TypeColors.psychic
+            "bug" -> TypeColors.bug
+            "rock" -> TypeColors.rock
+            "ghost" -> TypeColors.ghost
+            "dragon" -> TypeColors.dragon
+            "dark" -> TypeColors.dark
+            "steel" -> TypeColors.steel
+            "fairy" -> TypeColors.fairy
+            else -> containerColor
+        }
+    }
+
+//    Log.d("Details from main", "Pokemon ${pokemon.name} ${detailsPath}")
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -205,7 +255,13 @@ fun PokemonItem(pokemon: Pokemon, viewModel: PokemonViewModel, navController: Na
             viewModel.uiState.value.selectedPokemonId = pokemon.id!!
             navController.navigate("details/${pokemon.id}")
             Log.d("Click", "${pokemon.name} was clicked")
-        }
+        },
+        colors = CardColors(
+            containerColor = containerColor,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.30f)
+        )
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -222,11 +278,11 @@ fun PokemonItem(pokemon: Pokemon, viewModel: PokemonViewModel, navController: Na
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = pokemon.name.replaceFirstChar { it.uppercase() },
-                    style = androidx.compose.material3.MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium
                 )
                 Text(
                     text = "#${pokemon.id.toString().padStart(4, '0')}",
-                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
 
