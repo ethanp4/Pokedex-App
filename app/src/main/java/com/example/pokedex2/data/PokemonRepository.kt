@@ -28,18 +28,23 @@ class PokemonRepository(){
 
         //on startup, total file counts will be refreshed
         fun updateCacheStats() {
-            val imgCache = File(cacheDir, "image_cache")
-            for (file in cacheDir.listFiles()) {
-                if (!file.isFile) continue
-                stats.jsonCount++
-                stats.jsonSize += file.length()
+            try {
+                val imgCache = File(cacheDir, "image_cache")
+                for (file in cacheDir.listFiles()) {
+                    if (!file.isFile) continue
+                    stats.jsonCount++
+                    stats.jsonSize += file.length()
+                }
+                for (file in imgCache.listFiles()) {
+                    if (!file.isFile) continue
+                    stats.imgCount++
+                    stats.imgSize += file.length()
+                }
+                Log.d("CACHE STATS", stats.toString())
+            } catch (e: Exception) {
+                Log.d("CACHE STATS", "Error updating cache stats: ${e.toString()}")
             }
-            for (file in imgCache.listFiles()) {
-                if (!file.isFile) continue
-                stats.imgCount++
-                stats.imgSize += file.length()
-            }
-            Log.d("CACHE STATS", stats.toString())
+
         }
     }
 
