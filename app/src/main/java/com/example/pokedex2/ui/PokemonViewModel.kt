@@ -55,4 +55,12 @@ class PokemonViewModel : ViewModel() {
             _currentPokemonDetails.value = repo.getPokemonById(id, pokemonDetailsMap)
         }
     }
+
+    fun isPokemonFavourite(id: Int): Boolean {
+        return false
+    }
+
+    fun setPokemonFavourite(id: Int, status: Boolean) {
+
+    }
 }
