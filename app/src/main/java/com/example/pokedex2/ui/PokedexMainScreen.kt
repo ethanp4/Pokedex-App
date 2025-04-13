@@ -189,14 +189,15 @@ fun PokemonList(
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
-            label = { Text("Search") },
+            label = { Text("Search by name or ID") },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
         )
 
+        val query = searchQuery.trim().lowercase()
         val filteredList = pokemonList.value.filter {
-            it.name.contains(searchQuery.trim(), ignoreCase = true)
+            it.name.lowercase().contains(query) || it.id?.toString() == query
         }
 
         if (pokemonList.value.isEmpty()) {
@@ -214,6 +215,7 @@ fun PokemonList(
         }
     }
 }
+
 
 
 //each pokemon in the list on the main screen
