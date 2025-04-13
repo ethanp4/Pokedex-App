@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults.cardColors
@@ -74,6 +75,7 @@ fun PokedexApp(
         modifier = Modifier
     ) { innerPadding ->
         val uiState by viewModel.uiState.collectAsState()
+
         NavHost(
             navController = navController,
             startDestination = PokedexMainScreen.Start.name,
@@ -93,6 +95,9 @@ fun PokedexApp(
                 }
             }
         }
+        Button(onClick = {}) {
+            Text("Test")
+        }
     }
 }
 
@@ -101,7 +106,6 @@ fun PokedexApp(
 fun PokemonDetailsScreen(pokemonId: Int, viewModel: PokemonViewModel) {
     viewModel.getPokemonById(pokemonId)
     val pokemon = viewModel.currentPokemonDetails.observeAsState()
-
     if (pokemon.value == null) {
         Text("Loading...")
     } else {
