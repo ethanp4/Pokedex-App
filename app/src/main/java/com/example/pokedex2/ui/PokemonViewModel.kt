@@ -1,20 +1,18 @@
 package com.example.pokedex2
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.pokedex2.data.CacheStats
 import com.example.pokedex2.data.Pokemon
 import com.example.pokedex2.data.PokemonDetails
+import com.example.pokedex2.data.PokemonRepository
 import com.example.pokedex2.data.PokemonUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
-import com.example.pokedex2.data.PokemonRepository
-import java.io.File
 
 class PokemonViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(PokemonUiState())
@@ -26,33 +24,49 @@ class PokemonViewModel : ViewModel() {
     private val _currentPokemonDetails = MutableLiveData<PokemonDetails?>(null)
     val currentPokemonDetails: LiveData<PokemonDetails?> get() = _currentPokemonDetails
 
-    private val repo = PokemonRepository()
+    private val _cacheStats = MutableLiveData<CacheStats>()
+    val cacheStats: LiveData<CacheStats> get() = _cacheStats
 
-    private val _pokemonDetailsMap = MutableLiveData<HashMap<Int, File>>(hashMapOf())
-    val pokemonDetailsMap: LiveData<HashMap<Int, File>> get() = _pokemonDetailsMap
+    private val repo = PokemonRepository()
 
     init {
         getPokemon(10000, 0)
-        initDetailsMap()
-    }
-
-    private fun initDetailsMap() {
-        viewModelScope.launch {
-            //contains id -> cache file for available cached pokemon
-            _pokemonDetailsMap.value = repo.generatePokemonDetailsMap()
-            Log.d("MAP", "Map has ${_pokemonDetailsMap.value!!.count()} items")
-        }
+//        initDetailsMap()
     }
 
     fun getPokemon(limit: Int, offset: Int) {
+        if (_pokemonList.value?.isEmpty() == false) return
         viewModelScope.launch {
             _pokemonList.value = repo.getPokemon(limit, offset)
         }
     }
 
     fun getPokemonById(id: Int) {
+        if (_currentPokemonDetails.value?.id == id) return
         viewModelScope.launch {
-            _currentPokemonDetails.value = repo.getPokemonById(id, pokemonDetailsMap)
+            _currentPokemonDetails.value = repo.getPokemonById(id)
+        }
+    }
+
+    fun getCacheStats() {
+        viewModelScope.launch {
+            _cacheStats.value = repo.getCacheStats()
+        }
+    }
+
+    enum class ClearOption {
+        ALL,
+        IMAGES,
+        POKEMON
+    }
+    fun clearCache(option: ClearOption) {
+        viewModelScope.launch {
+            when (option) {
+                ClearOption.ALL -> repo.clearCache()
+                ClearOption.IMAGES -> repo.clearImageCache()
+                ClearOption.POKEMON -> repo.clearPokemonCache()
+            }
+            getCacheStats()
         }
     }
 
