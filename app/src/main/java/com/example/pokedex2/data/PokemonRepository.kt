@@ -9,55 +9,56 @@ import java.io.FileOutputStream
 
 data class CacheStats(
     var jsonCount: Int = 0,
-    var jsonSize: Long = 0,
+    var jsonSize: Double = 0.0,
     var imgCount: Int = 0,
-    var imgSize: Long = 0,
+    var imgSize: Double = 0.0,
     var totalEntries: Int = 0
 ) {
-    val totalSize: Long get() = jsonSize + imgSize
+    val totalSize: Double get() = jsonSize + imgSize
     override fun toString(): String {
-        return "Json Count: ${jsonCount}\nJson Size: ${jsonSize}\nImage Count: ${imgCount}\nImage Size: ${imgSize}"
+        return String.format(locale = null,"Json Count: %d\nJson Size: %.2f MB\nImage Count: %d\nImage Size: %.2f MB", jsonCount, jsonSize / 1000 / 1000, imgCount, imgSize / 1000 / 1000)
     }
 }
 
 class PokemonRepository(){
     companion object {
+        //used to store cacheDir because context is too much
         lateinit var cacheDir: File
-        var stats: CacheStats = CacheStats()
-
-        //on startup, total file counts will be refreshed
-        fun updateCacheStats() {
-            try {
-                val imgCache = File(cacheDir, "image_cache")
-                for (file in cacheDir.listFiles()) {
-                    if (!file.isFile) continue
-                    stats.jsonCount++
-                    stats.jsonSize += file.length()
-                }
-                for (file in imgCache.listFiles()) {
-                    if (!file.isFile) continue
-                    stats.imgCount++
-                    stats.imgSize += file.length()
-                }
-                Log.d("CACHE STATS", stats.toString())
-            } catch (e: Exception) {
-                Log.d("CACHE STATS", "Error updating cache stats: ${e.toString()}")
-            }
-
-        }
     }
 
-//    fun generatePokemonDetailsMap(): HashMap<Int, File> {
-//        val res: HashMap<Int, File> = HashMap<Int, File>()
-//        val idPattern = """pokedetails_([0-9]+)""".toRegex()
-//        for (file in cacheDir.listFiles()) {
-//            if (!file.isFile) continue
-//            val match = idPattern.find(file.name)
-//            val id = match?.groupValues?.get(1)?.toInt() ?: continue
-//            res[id] = file
-//        }
-//        return res
-//    }
+    fun generatePokemonDetailsMap(): HashMap<Int, File> {
+        val res: HashMap<Int, File> = HashMap<Int, File>()
+        val idPattern = """pokedetails_([0-9]+)""".toRegex()
+        for (file in cacheDir.listFiles()) {
+            if (!file.isFile) continue
+            val match = idPattern.find(file.name)
+            val id = match?.groupValues?.get(1)?.toInt() ?: continue
+            res[id] = file
+        }
+        return res
+    }
+
+    fun getCacheStats(): CacheStats {
+        val stats = CacheStats()
+        try {
+            val imgCache = File(cacheDir, "image_cache")
+            for (file in cacheDir.listFiles()) {
+                if (!file.isFile) continue
+                stats.jsonCount++
+                stats.jsonSize += file.length()
+            }
+            for (file in imgCache.listFiles()) {
+                if (!file.isFile) continue
+                stats.imgCount++
+                stats.imgSize += file.length()
+            }
+            Log.d("CACHE STATS", stats.toString())
+        } catch (e: Exception) {
+            Log.d("CACHE STATS", "Error updating cache stats: ${e.toString()}")
+        }
+        return stats
+    }
+
 
     fun savePokelistToCache(pokeList: List<Pokemon>) {
         val file = File(cacheDir, "pokelist.json")
@@ -123,7 +124,6 @@ class PokemonRepository(){
                     val id = match?.groupValues?.get(1)?.toInt()
                     pokemon.copy(id = id ?: index)
                 }
-                stats.totalEntries = pokeList.size
                 savePokelistToCache(pokeList)
                 return pokeList
             } else {
@@ -151,6 +151,49 @@ class PokemonRepository(){
             Log.d("ERR", e.toString())
         }
         return null
+    }
+
+    fun clearCache() {
+        try {
+            for (file in cacheDir.listFiles()) {
+                if (!file.isFile) continue
+                file.delete()
+            }
+            val imgCache = File(cacheDir, "image_cache")
+            for (file in imgCache.listFiles()) {
+                if (!file.isFile) continue
+                file.delete()
+            }
+            Log.d("CACHE", "Cache cleared")
+        } catch (e: Exception) {
+            Log.d("CACHE", "Error clearing cache: ${e.toString()}")
+        }
+    }
+
+    fun clearImageCache() {
+        try {
+            val imgCache = File(cacheDir, "image_cache")
+            for (file in imgCache.listFiles()) {
+                if (!file.isFile) continue
+                file.delete()
+            }
+            Log.d("CACHE", "Image cache cleared")
+        } catch (e: Exception) {
+            Log.d("CACHE", "Error clearing image cache: ${e.toString()}")
+        }
+    }
+
+    fun clearPokemonCache() {
+        try {
+            for (file in cacheDir.listFiles()) {
+                //there will be one dir (image_cache) to ignore
+                if (!file.isFile) continue
+                file.delete()
+            }
+            Log.d("CACHE", "Pokemon cache cleared")
+        } catch (e: Exception) {
+            Log.d("CACHE", "Error clearing pokemon cache: ${e.toString()}")
+        }
     }
 
 

@@ -48,6 +48,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.pokedex2.PokemonViewModel
 import com.example.pokedex2.R
 import com.example.pokedex2.data.Pokemon
+import com.example.pokedex2.ui.screens.SettingsScreen
 
 //stores the names of each screen for navigation
 val myIcons = Icons.Rounded
@@ -121,21 +122,9 @@ fun PokedexApp(
                 }
             }
             composable(route = PokedexMainScreen.Settings.name) { backStackEntry ->
-                SettingsScreen()
+                SettingsScreen(viewModel)
             }
         }
-    }
-}
-
-@Composable
-fun SettingsScreen() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(text = "Settings")
     }
 }
 
