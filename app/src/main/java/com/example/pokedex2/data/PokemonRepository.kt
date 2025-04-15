@@ -1,7 +1,6 @@
 package com.example.pokedex2.data
 
 import android.util.Log
-import androidx.lifecycle.LiveData
 import com.example.pokedex2.network.PokeApi
 import com.google.gson.Gson
 import java.io.File
@@ -48,17 +47,17 @@ class PokemonRepository(){
         }
     }
 
-    fun generatePokemonDetailsMap(): HashMap<Int, File> {
-        val res: HashMap<Int, File> = HashMap<Int, File>()
-        val idPattern = """pokedetails_([0-9]+)""".toRegex()
-        for (file in cacheDir.listFiles()) {
-            if (!file.isFile) continue
-            val match = idPattern.find(file.name)
-            val id = match?.groupValues?.get(1)?.toInt() ?: continue
-            res[id] = file
-        }
-        return res
-    }
+//    fun generatePokemonDetailsMap(): HashMap<Int, File> {
+//        val res: HashMap<Int, File> = HashMap<Int, File>()
+//        val idPattern = """pokedetails_([0-9]+)""".toRegex()
+//        for (file in cacheDir.listFiles()) {
+//            if (!file.isFile) continue
+//            val match = idPattern.find(file.name)
+//            val id = match?.groupValues?.get(1)?.toInt() ?: continue
+//            res[id] = file
+//        }
+//        return res
+//    }
 
     fun savePokelistToCache(pokeList: List<Pokemon>) {
         val file = File(cacheDir, "pokelist.json")
@@ -84,7 +83,7 @@ class PokemonRepository(){
 
     fun savePokedetailsToCache(
         pokemon: PokemonDetails,
-        pokemonDetailsMap: LiveData<HashMap<Int, File>>
+//        pokemonDetailsMap: LiveData<HashMap<Int, File>>
     ) {
         val id = pokemon.id;
         val file = File(cacheDir, "pokedetails_${id}.json")
@@ -93,8 +92,8 @@ class PokemonRepository(){
         FileOutputStream(file).use {
             it.write(json.toByteArray())
         }
-        pokemonDetailsMap.value?.set(id, file)
-        Log.d("MAP", "Map value added, size now ${pokemonDetailsMap.value?.size}")
+//        pokemonDetailsMap.value?.set(id, file)
+//        Log.d("MAP", "Map value added, size now ${pokemonDetailsMap.value?.size}")
         Log.d("CACHE", "Wrote ${pokemon.name} with size ${file.length()}")
     }
 
@@ -137,14 +136,14 @@ class PokemonRepository(){
         return emptyList()
     }
 
-    suspend fun getPokemonById(id: Int, pokemonDetailsMap: LiveData<HashMap<Int, File>>): PokemonDetails? {
+    suspend fun getPokemonById(id: Int): PokemonDetails? {
         try {
             var cachedPokemon = getPokedetailsFromCache(id)
             if (cachedPokemon != null) {
                 return cachedPokemon
             } else {
                 val response = PokeApi.retrofitService.getPokemonById(id.toString())
-                savePokedetailsToCache(response, pokemonDetailsMap)
+                savePokedetailsToCache(response)
                 return response
             }
 

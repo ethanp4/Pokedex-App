@@ -60,14 +60,13 @@ dependencies {
 
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
-    implementation (libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation (libs.androidx.runtime.livedata)
+    implementation(libs.androidx.runtime.livedata)
 
     implementation("androidx.navigation:navigation-compose:2.7.4")
 
     implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
     implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
     implementation("io.coil-kt:coil-compose:2.6.0")
-
 }

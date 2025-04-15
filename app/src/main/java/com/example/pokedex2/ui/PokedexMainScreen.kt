@@ -1,68 +1,60 @@
 package com.example.pokedex2.ui
 
-import com.example.pokedex2.PokemonViewModel
 import android.util.Log
 import androidx.annotation.StringRes
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
-import androidx.compose.material3.CardDefaults.cardColors
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberAsyncImagePainter
+import com.example.pokedex2.PokemonViewModel
 import com.example.pokedex2.R
 import com.example.pokedex2.data.Pokemon
-import com.example.pokedex2.data.PokemonDetails
-import coil.compose.rememberAsyncImagePainter
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.dp
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.ui.graphics.Color
-import com.example.pokedex2.ui.theme.TypeColors
-import com.example.pokedex2.ui.theme.TypeColors.bug
-import com.example.pokedex2.ui.theme.TypeColors.dark
-import com.example.pokedex2.ui.theme.TypeColors.dragon
-import com.example.pokedex2.ui.theme.TypeColors.fairy
-import com.example.pokedex2.ui.theme.TypeColors.fighting
-import com.example.pokedex2.ui.theme.TypeColors.flying
-import com.example.pokedex2.ui.theme.TypeColors.ghost
-import com.example.pokedex2.ui.theme.TypeColors.ground
-import com.example.pokedex2.ui.theme.TypeColors.ice
-import com.example.pokedex2.ui.theme.TypeColors.poison
-import com.example.pokedex2.ui.theme.TypeColors.psychic
-import com.example.pokedex2.ui.theme.TypeColors.rock
-import com.example.pokedex2.ui.theme.TypeColors.steel
-import com.google.gson.Gson
-import java.io.File
-import java.io.FileInputStream
 
 //stores the names of each screen for navigation
-enum class PokedexMainScreen(@StringRes val title: Int) {
-    Start(title = R.string.app_name),
-    Details(title = R.string.details)
+val myIcons = Icons.Rounded
+enum class PokedexMainScreen(@StringRes val title: Int, val icon: ImageVector?) {
+    Home(title = R.string.app_name, myIcons.Home),
+    Settings(title = R.string.settings, myIcons.Settings),
+    Details(title = R.string.details, null)
 }
 
 //main composable for the app
@@ -71,20 +63,54 @@ fun PokedexApp(
     viewModel: PokemonViewModel = viewModel(),
     navController: NavHostController = rememberNavController()
 ) {
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     Scaffold(
-        modifier = Modifier
+        modifier = Modifier,
+        bottomBar = {
+            BottomAppBar {
+                val navItems = listOf(
+                    PokedexMainScreen.Home,
+                    PokedexMainScreen.Settings
+                )
+
+                navItems.forEach { screen ->
+                    NavigationBarItem(
+                        icon = {
+                            if (screen.icon != null) {
+                                Image(
+                                    imageVector = screen.icon,
+                                    contentDescription = screen.name
+                                )
+                            }
+                        },
+                        label = { Text(screen.name) },
+                        selected = currentRoute == screen.name,
+                        onClick = {
+                            navController.navigate(screen.name) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                restoreState = true
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+            }
+
+        }
     ) { innerPadding ->
         val uiState by viewModel.uiState.collectAsState()
 
         NavHost(
             navController = navController,
-            startDestination = PokedexMainScreen.Start.name,
+            startDestination = PokedexMainScreen.Home.name,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(route = PokedexMainScreen.Start.name) {
+            composable(route = PokedexMainScreen.Home.name) {
                 PokemonList(
                     viewModel = viewModel,
-                    modifier = Modifier.padding(innerPadding),
+//                    modifier = Modifier.padding(innerPadding),
                     navController = navController
                 )
             }
@@ -94,10 +120,22 @@ fun PokedexApp(
                     PokemonDetailsScreen(pokemonId = it, viewModel = viewModel)
                 }
             }
+            composable(route = PokedexMainScreen.Settings.name) { backStackEntry ->
+                SettingsScreen()
+            }
         }
-        Button(onClick = {}) {
-            Text("Test")
-        }
+    }
+}
+
+@Composable
+fun SettingsScreen() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = "Settings")
     }
 }
 
@@ -220,35 +258,29 @@ fun PokemonList(
 @Composable
 fun PokemonItem(pokemon: Pokemon, viewModel: PokemonViewModel, navController: NavHostController) {
     val imageUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png"
-    val detailsPath = viewModel.pokemonDetailsMap.value?.get(pokemon.id)
-    var containerColor = MaterialTheme.colorScheme.surfaceContainer
 
-    if (detailsPath != null) {
-        val gson = Gson()
-        val json = FileInputStream(detailsPath).bufferedReader().use { it.readText() }
-        val details = gson.fromJson(json, PokemonDetails::class.java)
-        containerColor = when (details.types[0].type.name) {
-            "normal" -> TypeColors.normal
-            "fire" -> TypeColors.fire
-            "water" -> TypeColors.water
-            "electric" -> TypeColors.electric
-            "grass" -> TypeColors.grass
-            "ice" -> TypeColors.ice
-            "fighting" -> TypeColors.fighting
-            "poison" -> TypeColors.poison
-            "ground" -> TypeColors.ground
-            "flying" -> TypeColors.flying
-            "psychic" -> TypeColors.psychic
-            "bug" -> TypeColors.bug
-            "rock" -> TypeColors.rock
-            "ghost" -> TypeColors.ghost
-            "dragon" -> TypeColors.dragon
-            "dark" -> TypeColors.dark
-            "steel" -> TypeColors.steel
-            "fairy" -> TypeColors.fairy
-            else -> containerColor
-        }
-    }
+    val containerColor = MaterialTheme.colorScheme.surfaceContainer
+//    val containerColor = when (pokemon.type) {
+//        "normal" -> TypeColors.normal
+//        "fire" -> TypeColors.fire
+//        "water" -> TypeColors.water
+//        "electric" -> TypeColors.electric
+//        "grass" -> TypeColors.grass
+//        "ice" -> TypeColors.ice
+//        "fighting" -> TypeColors.fighting
+//        "poison" -> TypeColors.poison
+//        "ground" -> TypeColors.ground
+//        "flying" -> TypeColors.flying
+//        "psychic" -> TypeColors.psychic
+//        "bug" -> TypeColors.bug
+//        "rock" -> TypeColors.rock
+//        "ghost" -> TypeColors.ghost
+//        "dragon" -> TypeColors.dragon
+//        "dark" -> TypeColors.dark
+//        "steel" -> TypeColors.steel
+//        "fairy" -> TypeColors.fairy
+//        else -> MaterialTheme.colorScheme.surfaceContainer
+//    }
 
 //    Log.d("Details from main", "Pokemon ${pokemon.name} ${detailsPath}")
     Card(
