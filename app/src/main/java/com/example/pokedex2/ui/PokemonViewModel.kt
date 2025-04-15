@@ -71,10 +71,10 @@ class PokemonViewModel : ViewModel() {
     }
 
     fun isPokemonFavourite(id: Int): Boolean {
-        return false
+        return repo.isPokemonFavourite(id)
     }
 
     fun setPokemonFavourite(id: Int, status: Boolean) {
-
+        repo.setPokemonFavourite(id, status)
     }
 }

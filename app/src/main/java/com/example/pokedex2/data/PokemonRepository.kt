@@ -24,6 +24,39 @@ class PokemonRepository(){
     companion object {
         //used to store cacheDir because context is too much
         lateinit var cacheDir: File
+        lateinit var filesDir: File
+    }
+
+    fun isPokemonFavourite(id: Int): Boolean {
+        val file = File(filesDir, "favourites.txt")
+        if (!file.exists()) {
+            Log.d("CACHE", "favourites.txt not found")
+            return false
+        }
+        Log.d("CACHE", "favourites.txt found! size: ${file.length()}")
+        val lines = file.readLines()
+        for (line in lines) {
+            if (line.toInt() == id) {
+                return true
+            }
+        }
+        return false
+    }
+
+    fun setPokemonFavourite(id: Int, status: Boolean) {
+        val file = File(filesDir, "favourites.txt")
+        if (!file.exists()) {
+            Log.d("CACHE", "favourites.txt not found")
+            file.createNewFile()
+        }
+        Log.d("CACHE", "favourites.txt found! size: ${file.length()}")
+        val lines = file.readLines().toMutableList()
+        if (status) {
+            lines.add(id.toString())
+        } else {
+            lines.remove(id.toString())
+        }
+        file.writeText(lines.joinToString("\n"))
     }
 
     fun generatePokemonDetailsMap(): HashMap<Int, File> {
