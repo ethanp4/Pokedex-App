@@ -27,6 +27,11 @@ class PokemonViewModel : ViewModel() {
     private val _cacheStats = MutableLiveData<CacheStats>()
     val cacheStats: LiveData<CacheStats> get() = _cacheStats
 
+    private val _favorites = MutableLiveData<Set<Int>>(setOf())
+    val favorites: LiveData<Set<Int>> get() = _favorites
+
+
+
     private val repo = PokemonRepository()
 
     init {
@@ -59,6 +64,7 @@ class PokemonViewModel : ViewModel() {
         IMAGES,
         POKEMON
     }
+
     fun clearCache(option: ClearOption) {
         viewModelScope.launch {
             when (option) {
@@ -71,10 +77,17 @@ class PokemonViewModel : ViewModel() {
     }
 
     fun isPokemonFavourite(id: Int): Boolean {
-        return false
+        return _favorites.value?.contains(id) ?: false
     }
 
     fun setPokemonFavourite(id: Int, status: Boolean) {
-
+        val currentFavs = _favorites.value ?: mutableSetOf()
+        val updatedFavs = currentFavs.toMutableSet() // Make a copy to trigger LiveData observers
+        if (status) {
+            updatedFavs.add(id)
+        } else {
+            updatedFavs.remove(id)
+        }
+        _favorites.value = updatedFavs
     }
 }

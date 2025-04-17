@@ -49,6 +49,20 @@ import com.example.pokedex2.PokemonViewModel
 import com.example.pokedex2.R
 import com.example.pokedex2.data.Pokemon
 import com.example.pokedex2.ui.screens.SettingsScreen
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.res.painterResource
+import androidx.compose.material3.CenterAlignedTopAppBar
+
+
+
 
 //stores the names of each screen for navigation
 val myIcons = Icons.Rounded
@@ -59,6 +73,7 @@ enum class PokedexMainScreen(@StringRes val title: Int, val icon: ImageVector?) 
 }
 
 //main composable for the app
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun PokedexApp(
     viewModel: PokemonViewModel = viewModel(),
@@ -67,7 +82,24 @@ fun PokedexApp(
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     Scaffold(
         modifier = Modifier,
-        bottomBar = {
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = R.drawable.pokedexicon),
+                            contentDescription = "PokeDex Logo",
+                            modifier = Modifier
+                                .size(32.dp)
+                                .padding(end = 8.dp)
+                        )
+                        Text(text = "PokeDex")
+                    }
+                }
+            )
+        },
+
+                bottomBar = {
             BottomAppBar {
                 val navItems = listOf(
                     PokedexMainScreen.Home,
@@ -272,6 +304,8 @@ fun PokemonItem(pokemon: Pokemon, viewModel: PokemonViewModel, navController: Na
 //        "fairy" -> TypeColors.fairy
 //        else -> MaterialTheme.colorScheme.surfaceContainer
 //    }
+    val favorites by viewModel.favorites.observeAsState(setOf())
+    val isFavorite = favorites.contains(pokemon.id)
 
 //    Log.d("Details from main", "Pokemon ${pokemon.name} ${detailsPath}")
     Card(
@@ -292,27 +326,41 @@ fun PokemonItem(pokemon: Pokemon, viewModel: PokemonViewModel, navController: Na
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // pokemon image
-            Image(
-                painter = rememberAsyncImagePainter(model = imageUrl),
-                contentDescription = pokemon.name,
-                modifier = Modifier
-                    .size(56.dp)
-                    .padding(end = 16.dp)
-            )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = pokemon.name.replaceFirstChar { it.uppercase() },
-                    style = MaterialTheme.typography.titleMedium
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = rememberAsyncImagePainter(model = imageUrl),
+                    contentDescription = pokemon.name,
+                    modifier = Modifier
+                        .size(56.dp)
+                        .padding(end = 16.dp)
                 )
-                Text(
-                    text = "#${pokemon.id.toString().padStart(4, '0')}",
-                    style = MaterialTheme.typography.bodySmall
-                )
+                Column {
+                    Text(
+                        text = pokemon.name.replaceFirstChar { it.uppercase() },
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = "#${pokemon.id.toString().padStart(4, '0')}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
 
+            IconButton(onClick = {
+                val id = pokemon.id ?: return@IconButton
+                viewModel.setPokemonFavourite(id, !isFavorite)
+            }) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Filled.Star else Icons.Outlined.Star,
+                    contentDescription = if (isFavorite) "Unstar" else "Star",
+                    tint = if (isFavorite) Color.Yellow else Color.Gray
+                )
+            }
         }
     }
 }

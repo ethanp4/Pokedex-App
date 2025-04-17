@@ -3,6 +3,7 @@ package com.example.pokedex2.data
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
+
 @JsonClass(generateAdapter = true)
 data class PokemonDetails(
     val id: Int,
