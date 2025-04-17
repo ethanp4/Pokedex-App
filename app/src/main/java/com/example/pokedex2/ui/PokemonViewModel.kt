@@ -30,6 +30,14 @@ class PokemonViewModel : ViewModel() {
     private val _favorites = MutableLiveData<Set<Int>>(setOf())
     val favorites: LiveData<Set<Int>> get() = _favorites
 
+    private val _shinyMode = MutableLiveData(false)
+    val shinyMode: LiveData<Boolean> get() = _shinyMode
+
+    fun toggleShinyMode() {
+        _shinyMode.value = !(_shinyMode.value ?: false)
+    }
+
+
 
 
     private val repo = PokemonRepository()

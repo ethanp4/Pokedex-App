@@ -60,6 +60,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Switch
+
 
 
 
@@ -165,6 +168,9 @@ fun PokedexApp(
 fun PokemonDetailsScreen(pokemonId: Int, viewModel: PokemonViewModel) {
     viewModel.getPokemonById(pokemonId)
     val pokemon = viewModel.currentPokemonDetails.observeAsState()
+
+    var showShiny by remember { mutableStateOf(false) }
+
     if (pokemon.value == null) {
         Text("Loading...")
     } else {
@@ -176,8 +182,27 @@ fun PokemonDetailsScreen(pokemonId: Int, viewModel: PokemonViewModel) {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Toggle for shiny version
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(bottom = 16.dp)
+            ) {
+                Text("Shiny")
+                Spacer(modifier = Modifier.width(8.dp))
+                Switch(
+                    checked = showShiny,
+                    onCheckedChange = { showShiny = it }
+                )
+            }
+
+            // Image depending on shiny toggle
+            val imageUrl = if (showShiny)
+                details.sprites.other?.officialArtwork?.frontShiny
+            else
+                details.sprites.other?.officialArtwork?.frontDefault
+
             Image(
-                painter = rememberAsyncImagePainter(details.sprites.other?.officialArtwork?.frontDefault),
+                painter = rememberAsyncImagePainter(imageUrl),
                 contentDescription = details.name,
                 modifier = Modifier.size(200.dp)
             )
@@ -187,12 +212,10 @@ fun PokemonDetailsScreen(pokemonId: Int, viewModel: PokemonViewModel) {
             Text(text = "#${details.id} ${details.name.replaceFirstChar { it.uppercase() }}")
             Spacer(modifier = Modifier.height(8.dp))
 
-            // types
             Text(
                 text = "Types: ${details.types.joinToString { it.type.name.replaceFirstChar { it.uppercase() } }}"
             )
 
-            // abilities
             Text(
                 text = "Abilities: ${details.abilities.joinToString { it.ability.name.replaceFirstChar { it.uppercase() } }}"
             )
@@ -210,7 +233,6 @@ fun PokemonDetailsScreen(pokemonId: Int, viewModel: PokemonViewModel) {
 
                     Text(text = "$statName: $statValue", modifier = Modifier.padding(vertical = 4.dp))
 
-                    //Bars under each stat
                     LinearProgressIndicator(
                         progress = progress,
                         modifier = Modifier
@@ -232,6 +254,7 @@ fun PokemonDetailsScreen(pokemonId: Int, viewModel: PokemonViewModel) {
         }
     }
 }
+
 
 //this composable displays the list of every pokemon
 @Composable
