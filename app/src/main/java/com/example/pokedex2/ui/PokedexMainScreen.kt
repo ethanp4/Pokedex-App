@@ -3,6 +3,7 @@ package com.example.pokedex2.ui
 import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,19 +12,26 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -36,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -48,30 +57,17 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.pokedex2.PokemonViewModel
 import com.example.pokedex2.R
 import com.example.pokedex2.data.Pokemon
+import com.example.pokedex2.ui.screens.FavouritesScreen
 import com.example.pokedex2.ui.screens.SettingsScreen
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.ui.res.painterResource
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Switch
-
-
-
 
 
 //stores the names of each screen for navigation
-val myIcons = Icons.Rounded
+val roundedIcons = Icons.Rounded
+val outlinedIcons = Icons.Outlined
 enum class PokedexMainScreen(@StringRes val title: Int, val icon: ImageVector?) {
-    Home(title = R.string.app_name, myIcons.Home),
-    Settings(title = R.string.settings, myIcons.Settings),
+    Home(title = R.string.app_name, roundedIcons.Home),
+    Favourites(title = R.string.favourites, outlinedIcons.Star),
+    Settings(title = R.string.settings, roundedIcons.Settings),
     Details(title = R.string.details, null)
 }
 
@@ -102,10 +98,11 @@ fun PokedexApp(
             )
         },
 
-                bottomBar = {
+        bottomBar = {
             BottomAppBar {
                 val navItems = listOf(
                     PokedexMainScreen.Home,
+                    PokedexMainScreen.Favourites,
                     PokedexMainScreen.Settings
                 )
 
@@ -133,7 +130,6 @@ fun PokedexApp(
                     )
                 }
             }
-
         }
     ) { innerPadding ->
         val uiState by viewModel.uiState.collectAsState()
@@ -146,7 +142,12 @@ fun PokedexApp(
             composable(route = PokedexMainScreen.Home.name) {
                 PokemonList(
                     viewModel = viewModel,
-//                    modifier = Modifier.padding(innerPadding),
+                    navController = navController
+                )
+            }
+            composable(route = PokedexMainScreen.Favourites.name) {
+                FavouritesScreen(
+                    viewModel = viewModel,
                     navController = navController
                 )
             }
@@ -306,31 +307,9 @@ fun PokemonItem(pokemon: Pokemon, viewModel: PokemonViewModel, navController: Na
     val imageUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png"
 
     val containerColor = MaterialTheme.colorScheme.surfaceContainer
-//    val containerColor = when (pokemon.type) {
-//        "normal" -> TypeColors.normal
-//        "fire" -> TypeColors.fire
-//        "water" -> TypeColors.water
-//        "electric" -> TypeColors.electric
-//        "grass" -> TypeColors.grass
-//        "ice" -> TypeColors.ice
-//        "fighting" -> TypeColors.fighting
-//        "poison" -> TypeColors.poison
-//        "ground" -> TypeColors.ground
-//        "flying" -> TypeColors.flying
-//        "psychic" -> TypeColors.psychic
-//        "bug" -> TypeColors.bug
-//        "rock" -> TypeColors.rock
-//        "ghost" -> TypeColors.ghost
-//        "dragon" -> TypeColors.dragon
-//        "dark" -> TypeColors.dark
-//        "steel" -> TypeColors.steel
-//        "fairy" -> TypeColors.fairy
-//        else -> MaterialTheme.colorScheme.surfaceContainer
-//    }
-    val favorites by viewModel.favorites.observeAsState(setOf())
-    val isFavorite = favorites.contains(pokemon.id)
 
-//    Log.d("Details from main", "Pokemon ${pokemon.name} ${detailsPath}")
+    var isFavorite by remember { mutableStateOf(viewModel.isPokemonFavourite(pokemon.id!!)) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -374,10 +353,12 @@ fun PokemonItem(pokemon: Pokemon, viewModel: PokemonViewModel, navController: Na
                 }
             }
 
-            IconButton(onClick = {
-                val id = pokemon.id ?: return@IconButton
-                viewModel.setPokemonFavourite(id, !isFavorite)
-            }) {
+            IconButton(
+                onClick = {
+                    val id = pokemon.id ?: return@IconButton
+                    viewModel.setPokemonFavourite(id, !isFavorite)
+                    isFavorite = viewModel.isPokemonFavourite(pokemon.id!!)
+                }) {
                 Icon(
                     imageVector = if (isFavorite) Icons.Filled.Star else Icons.Outlined.Star,
                     contentDescription = if (isFavorite) "Unstar" else "Star",

@@ -37,9 +37,6 @@ class PokemonViewModel : ViewModel() {
         _shinyMode.value = !(_shinyMode.value ?: false)
     }
 
-
-
-
     private val repo = PokemonRepository()
 
     init {
@@ -67,6 +64,12 @@ class PokemonViewModel : ViewModel() {
         }
     }
 
+    fun getFavouritePokemon() {
+        viewModelScope.launch {
+            _favorites.value = repo.getFavouritePokemon()
+        }
+    }
+
     enum class ClearOption {
         ALL,
         IMAGES,
@@ -85,17 +88,10 @@ class PokemonViewModel : ViewModel() {
     }
 
     fun isPokemonFavourite(id: Int): Boolean {
-        return _favorites.value?.contains(id) ?: false
+        return repo.isPokemonFavourite(id)
     }
 
     fun setPokemonFavourite(id: Int, status: Boolean) {
-        val currentFavs = _favorites.value ?: mutableSetOf()
-        val updatedFavs = currentFavs.toMutableSet() // Make a copy to trigger LiveData observers
-        if (status) {
-            updatedFavs.add(id)
-        } else {
-            updatedFavs.remove(id)
-        }
-        _favorites.value = updatedFavs
+        repo.setPokemonFavourite(id, status)
     }
 }
