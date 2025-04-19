@@ -26,21 +26,6 @@ class MainActivity : ComponentActivity() {
                     PokemonRepository.cacheDir = cacheDir
 
                     val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-//                    val capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-
-//                    if (capabilities != null) {
-//                        isOnline = when {
-//                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
-//                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
-//                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
-//                            else -> false
-//                        }
-//                    }
-//                    val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE)
-//                    return if (connectivityManager is ConnectivityManager) {
-//                        val networkInfo: NetworkInfo? = connectivityManager.activeNetworkInfo
-//                        networkInfo?.isConnected ?: false
-//                    } else false
                     val networkInfo: NetworkInfo? = connectivityManager.activeNetworkInfo
                     var isOnline: Boolean
                     if (networkInfo != null) {
