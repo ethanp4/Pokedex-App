@@ -33,6 +33,9 @@ class PokemonViewModel : ViewModel() {
     private val _shinyMode = MutableLiveData(false)
     val shinyMode: LiveData<Boolean> get() = _shinyMode
 
+    private val _cachedPokemonSet = MutableLiveData<Set<Int>>()
+    val cachedPokemonSet: LiveData<Set<Int>> get() = _cachedPokemonSet
+
     fun toggleShinyMode() {
         _shinyMode.value = !(_shinyMode.value ?: false)
     }
@@ -41,7 +44,13 @@ class PokemonViewModel : ViewModel() {
 
     init {
         getPokemon(10000, 0)
-//        initDetailsMap()
+        initCachedSet()
+    }
+
+    private fun initCachedSet() {
+        viewModelScope.launch {
+            _cachedPokemonSet.value = repo.generateCachedPokemonSet()
+        }
     }
 
     fun getPokemon(limit: Int, offset: Int) {

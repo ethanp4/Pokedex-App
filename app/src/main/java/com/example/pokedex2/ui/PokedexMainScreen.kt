@@ -1,6 +1,7 @@
 package com.example.pokedex2.ui
 
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -76,7 +77,8 @@ enum class PokedexMainScreen(@StringRes val title: Int, val icon: ImageVector?) 
 @Composable
 fun PokedexApp(
     viewModel: PokemonViewModel = viewModel(),
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    isOnline: Boolean
 ) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     Scaffold(
@@ -142,7 +144,8 @@ fun PokedexApp(
             composable(route = PokedexMainScreen.Home.name) {
                 PokemonList(
                     viewModel = viewModel,
-                    navController = navController
+                    navController = navController,
+                    isOnline = isOnline
                 )
             }
             composable(route = PokedexMainScreen.Favourites.name) {
@@ -262,9 +265,12 @@ fun PokemonDetailsScreen(pokemonId: Int, viewModel: PokemonViewModel) {
 fun PokemonList(
     viewModel: PokemonViewModel,
     modifier: Modifier = Modifier,
-    navController: NavHostController
+    navController: NavHostController,
+    isOnline: Boolean
 ) {
     val pokemonList = viewModel.pokemonList.observeAsState(initial = emptyList())
+    val cachedIds = viewModel.cachedPokemonSet.observeAsState(initial = emptySet())
+
     var searchQuery by remember { mutableStateOf("") }
 
     Column(modifier = modifier.padding(16.dp)) {
@@ -279,8 +285,15 @@ fun PokemonList(
         )
 
         val query = searchQuery.trim().lowercase()
-        val filteredList = pokemonList.value.filter {
+        var filteredList = pokemonList.value.filter {
             it.name.lowercase().contains(query) || it.id?.toString() == query
+        }
+
+        //filter to only cached entries if not online
+        if (!isOnline) {
+            filteredList = pokemonList.value.filter { pokemon ->
+                cachedIds.value.contains(pokemon.id)
+            }
         }
 
         if (pokemonList.value.isEmpty()) {

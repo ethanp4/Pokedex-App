@@ -82,6 +82,18 @@ class PokemonRepository(){
         return res
     }
 
+    fun generateCachedPokemonSet(): Set<Int> {
+        val res: HashSet<Int> = HashSet<Int>()
+        val idPattern = """pokedetails_([0-9]+)""".toRegex()
+        for (file in cacheDir.listFiles()) {
+            if (!file.isFile) continue
+            val match = idPattern.find(file.name)
+            val id = match?.groupValues?.get(1)?.toInt() ?: continue
+            res.add(id)
+        }
+        return res
+    }
+
     fun getCacheStats(): CacheStats {
         val stats = CacheStats()
         try {
